@@ -35,7 +35,7 @@ import collections
 import sys
 
 
-__version__ = '0.2.0'
+__version__ = '1.0.0'
 
 __title__ = 'keyboardlayout'
 __author__ = 'Daniel P. Seemuth'
