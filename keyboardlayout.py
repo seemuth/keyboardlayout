@@ -179,8 +179,26 @@ def layoutfromfile(file, layersize, filter, keycodes):
             if not keyname:
                 continue
 
+            key = None
             if keyname in keycodes:
-                curlayer.keys[row][col] = keycodes[keyname]
+                key = keycodes[keyname]
+
+            elif keyname.startswith('CUSTOM_'):
+                subparts = keyname.split('_')
+                if len(subparts) != 3:
+                    raise ValueError(
+                        'invalid CUSTOM key format',
+                        linenum,
+                        keyname,
+                    )
+
+                key = Key(
+                    int(subparts[1]),
+                    int(subparts[2]),
+                )
+
+            if key is not None:
+                curlayer.keys[row][col] = key
             else:
                 unknowncodes.add(keyname)
 
