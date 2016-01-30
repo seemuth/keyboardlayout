@@ -224,5 +224,10 @@ if __name__ == '__main__':
             keycodes,
         )
 
+    for layernum, layer in sorted(layers.items()):
+        for command in layer.commands(layernum):
+            print(command, end=' ')
+        print()
+
     for code in sorted(unknowncodes):
         print('UNKNOWN', repr(code))
