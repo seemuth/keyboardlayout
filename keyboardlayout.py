@@ -4,7 +4,7 @@
 Keyboard layout generator.
 
 Usage:
-    layout.py <rows> <columns> <keycodefile> <layoutfile> [--filter=<tag>] [--reverse] [--checkkeycodes]
+    layout.py <rows> <columns> <keycodefile> <layoutfile> <command> [--filter=<tag>] [--reverse] [--checkkeycodes]
     layout.py (-h | --help)
     layout.py --version
 
@@ -97,7 +97,7 @@ class Layer:
                 if key is None:
                     key = Key(0, KeyType.NORMAL)
 
-                yield 'uniqueksetkey({:}({:}({:}({:}({:}'.format(
+                yield '({:}({:}({:}({:}({:}'.format(
                     c, r, z, key.keyval, key.keytype,
                 )
 
@@ -243,7 +243,7 @@ if __name__ == '__main__':
 
     for layernum, layer in sorted(layers.items()):
         for command in layer.commands(layernum):
-            print(command, end=' ')
+            print(args['<command>'] + command, end=' ')
         print()
 
     for code in sorted(unknowncodes):
