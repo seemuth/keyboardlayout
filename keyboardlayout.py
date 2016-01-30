@@ -30,7 +30,6 @@ Options:
 #   limitations under the License.
 
 import docopt
-import enum
 import sys
 
 
@@ -43,7 +42,7 @@ __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2016 Daniel P. Seemuth'
 
 
-class KeyType(enum.Enum):
+class KeyType:
     NORMAL = 0
     FN = 1
     SPACEFN = 2
@@ -97,7 +96,7 @@ class Layer:
                     key = Key(0, KeyType.NORMAL)
 
                 yield 'uniqueksetkey({:}({:}({:}({:}({:}'.format(
-                    c, r, z, key.keyval, key.keytype.value,
+                    c, r, z, key.keyval, key.keytype,
                 )
 
 
@@ -117,7 +116,7 @@ def keycodesfromfile(file):
             continue
 
         keyval = int(keyval)
-        keytype = KeyType(int(keytype))
+        keytype = int(keytype)
 
         ret[name] = Key(keyval, keytype)
 
