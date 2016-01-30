@@ -4,13 +4,14 @@
 Keyboard layout generator.
 
 Usage:
-    layout.py <rows> <columns> <keycodefile> <layoutfile> [--filter=<tag>] [--checkkeycodes]
+    layout.py <rows> <columns> <keycodefile> <layoutfile> [--filter=<tag>] [--reverse] [--checkkeycodes]
     layout.py (-h | --help)
     layout.py --version
 
 Options:
     -h --help       Show this screen.
     --version       Show version.
+    --reverse       Reverse the columns for all layers (useful for upside-down PCBs)
     --filter=<tag>  Include only layout sections matching <tag>
 
 """
@@ -124,7 +125,7 @@ def keycodesfromfile(file):
     return ret
 
 
-def layoutfromfile(file, layersize, filter, keycodes):
+def layoutfromfile(file, layersize, filter, reverse, keycodes):
     unknowncodes = set()
     layers = dict()
     curlayer = None
@@ -199,6 +200,8 @@ def layoutfromfile(file, layersize, filter, keycodes):
                 )
 
             if key is not None:
+                if reverse:
+                    col = layersize[1] - 1 - col
                 curlayer.keys[row][col] = key
             else:
                 unknowncodes.add(keyname)
@@ -234,6 +237,7 @@ if __name__ == '__main__':
             F,
             (rows, columns),
             args['--filter'],
+            args['--reverse'],
             keycodes,
         )
 
