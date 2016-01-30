@@ -24,6 +24,8 @@ and for the right-hand board (which is reversed due to flipping over the PCB):
 This will produce the serial commands that will implement the desired layout.
 
 # Layout file syntax
+(Note that the Markdown rendering translates the internal TAB characters to
+multiple space characters.)
 ```
 LAYOUT 0 LEFT							
 ESC	1	2	3	4	5	6	
@@ -57,3 +59,7 @@ RIGHT_SHIFT		DELETE	RIGHT_ALT	RIGHT_CTRL	HOME	PAGEDOWN	END
 A layer's layout starts with ```LAYOUT LAYERNUMBER TAG```.
 Subsequent lines specify one key per cell.
 Columns are separated by TABs, and rows are specified one per line.
+
+Custom keys can be specified by using ```CUSTOM_VALUE_TYPE```, where
+```VALUE``` and ```TYPE``` are used in the keyboard firmware.
+```TYPE``` is typically used to differentiate special keys like Fn, SpaceFn, etc.
