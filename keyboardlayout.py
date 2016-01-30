@@ -30,6 +30,7 @@ Options:
 #   limitations under the License.
 
 import docopt
+import enum
 import sys
 
 
@@ -42,6 +43,169 @@ __license__ = 'Apache 2.0'
 __copyright__ = 'Copyright 2016 Daniel P. Seemuth'
 
 
+class KeyType(enum.Enum):
+    NORMAL = 0
+    FN = 1
+    SPACEFN = 2
+    SWITCHLAYER = 3
+    MEDIA = 4
+    TOGGLEFN = 5
+
+
+class Key:
+    """One key's assignment: value and type.
+
+    """
+
+    def __init__(self, keyval, keytype=KeyType.NORMAL):
+        self.keyval = keyval
+        self.keytype = keytype
+
+
+    def __repr__(self):
+        return 'Key({:}, {:})'.format(self.keyval, self.keytype)
+
+
+class Layer:
+    """Hold all key assignments for one layer.
+
+    """
+
+    def __init__(self, size, keys=None):
+        self.rows, self.columns = size
+        self.keys = [
+            [None for c in range(self.columns)]
+            for r in range(self.rows)
+        ]
+
+        if keys:
+            for coords, key in keys:
+                x, y = coords
+                self.keys[y][x] = key
+
+
+    def commands(self, z):
+        """Yield one uniqueksetkey command per key in the layout.
+
+        """
+
+        for r in range(self.rows):
+            for c in range(self.columns):
+                key = self.keys[r][c]
+
+                if key is None:
+                    key = Key(0, KeyType.NORMAL)
+
+                yield 'uniqueksetkey({:}({:}({:}({:}({:}'.format(
+                    c, r, z, key.keyval, key.keytype.value,
+                )
+
+
+def keycodesfromfile(file):
+    ret = dict()
+
+    for line in file:
+        line = line.rstrip()
+
+        if not line:
+            continue
+
+        try:
+            name, keyval, keytype = line.split('\t')
+        except ValueError:
+            print('Invalid line:', line)
+            continue
+
+        keyval = int(keyval)
+        keytype = KeyType(int(keytype))
+
+        ret[name] = Key(keyval, keytype)
+
+    return ret
+
+
+def layoutfromfile(file, layersize, filter, keycodes):
+    unknowncodes = set()
+    layers = dict()
+    curlayer = None
+
+    for linenum, line in enumerate(file, start=1):
+        line = line.rstrip()
+
+        if not line:
+            continue
+
+        if line.upper().startswith('LAYOUT '):
+            parts = line.split()
+            if len(parts) < 3:
+                raise ValueError(
+                    'invalid layer format',
+                    linenum,
+                    line,
+                )
+
+            layernum = int(parts[1])
+            tag = parts[2]
+
+            if (filter is None) or (tag == filter):
+                if layernum in layers:
+                    raise ValueError(
+                        'layer already defined',
+                        linenum,
+                        layernum,
+                    )
+
+                curlayer = Layer(layersize)
+                layers[layernum] = curlayer
+                row = 0
+
+            else:
+                curlayer = None
+
+            continue
+
+        if curlayer is None:
+            continue
+
+        if row >= layersize[0]:
+            raise ValueError(
+                'too many rows',
+                linenum,
+                row,
+            )
+
+        parts = line.split('\t')
+
+        for col, keyname in enumerate(parts):
+            if not keyname:
+                continue
+
+            if keyname in keycodes:
+                curlayer.keys[row][col] = keycodes[keyname]
+            else:
+                unknowncodes.add(keyname)
+
+        row += 1
+
+    return layers, unknowncodes
+
+
 if __name__ == '__main__':
     args = docopt.docopt(__doc__, version=__version__)
-    print(args)
+
+    rows = int(args['<rows>'])
+    columns = int(args['<columns>'])
+
+    with open(args['<keycodefile>'], 'r') as F:
+        keycodes = keycodesfromfile(F)
+
+    with open(args['<layoutfile>'], 'r') as F:
+        layers, unknowncodes = layoutfromfile(
+            F,
+            (rows, columns),
+            args['--filter'],
+            keycodes,
+        )
+
+    for code in sorted(unknowncodes):
+        print('UNKNOWN', repr(code))
