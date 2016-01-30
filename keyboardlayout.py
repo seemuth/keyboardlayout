@@ -4,7 +4,7 @@
 Keyboard layout generator.
 
 Usage:
-    layout.py <rows> <columns> <keycodefile> [--filter=<tag>] <layoutfile>
+    layout.py <rows> <columns> <keycodefile> <layoutfile> [--filter=<tag>] [--checkkeycodes]
     layout.py (-h | --help)
     layout.py --version
 
@@ -29,6 +29,7 @@ Options:
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import collections
 import docopt
 import sys
 
@@ -210,11 +211,23 @@ def layoutfromfile(file, layersize, filter, keycodes):
 if __name__ == '__main__':
     args = docopt.docopt(__doc__, version=__version__)
 
+    with open(args['<keycodefile>'], 'r') as F:
+        keycodes = keycodesfromfile(F)
+
+    if args['--checkkeycodes']:
+        val2names = collections.defaultdict(set)
+        for name, key in keycodes.items():
+            val2names[(key.keyval, key.keytype)].add(name)
+
+        for key, names in val2names.items():
+            if len(names) != 1:
+                print('KEY2CODE', key, sorted(names))
+
+        sys.exit(0)
+
     rows = int(args['<rows>'])
     columns = int(args['<columns>'])
 
-    with open(args['<keycodefile>'], 'r') as F:
-        keycodes = keycodesfromfile(F)
 
     with open(args['<layoutfile>'], 'r') as F:
         layers, unknowncodes = layoutfromfile(
