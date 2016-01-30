@@ -30,12 +30,12 @@ Options:
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import argparse
 import collections
-import docopt
 import sys
 
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 __title__ = 'keyboardlayout'
 __author__ = 'Daniel P. Seemuth'
@@ -212,12 +212,77 @@ def layoutfromfile(file, layersize, filter, reverse, keycodes):
 
 
 if __name__ == '__main__':
-    args = docopt.docopt(__doc__, version=__version__)
+    parser = argparse.ArgumentParser(
+        description=__description__,
+    )
 
-    with open(args['<keycodefile>'], 'r') as F:
-        keycodes = keycodesfromfile(F)
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=__version__,
+    )
 
-    if args['--checkkeycodes']:
+    parser_genlayout = parser.add_argument_group()
+
+    parser_genlayout.add_argument(
+        'rows',
+        type=int,
+        help='Number of rows in the keyboard layout',
+    )
+
+    parser_genlayout.add_argument(
+        'columns',
+        type=int,
+        help='Number of columns in the keyboard layout',
+    )
+
+    parser_genlayout.add_argument(
+        'keycodefile',
+        type=argparse.FileType('r'),
+        help='Tab-delimited file mapping key names to value and type',
+    )
+
+    parser_genlayout.add_argument(
+        'layoutfile',
+        type=argparse.FileType('r'),
+        help="Tab-delimited file containing each layer's key assignments",
+    )
+
+    parser_genlayout.add_argument(
+        '-c', '--command',
+        nargs=1,
+        default=['uniqueksetkey'],
+        help='Serial command to set a specific key',
+        metavar='command',
+    )
+
+    parser_genlayout.add_argument(
+        '-f', '--filter',
+        nargs=1,
+        default=[None],
+        help='Include only layers that match this tag',
+        metavar='tag',
+    )
+
+    parser_genlayout.add_argument(
+        '-r', '--reverse',
+        action='store_true',
+        default=False,
+        help='Reverse layout columns (useful for flipped designs)',
+    )
+
+    parser.add_argument(
+        '--checkkeycodes',
+        action='store_true',
+        default=False,
+        help='Check the specified keycode file for duplicate key codes',
+    )
+
+    prefs = parser.parse_args()
+
+    keycodes = keycodesfromfile(prefs.keycodefile)
+
+    if prefs.checkkeycodes:
         val2names = collections.defaultdict(set)
         for name, key in keycodes.items():
             val2names[(key.keyval, key.keytype)].add(name)
@@ -228,22 +293,18 @@ if __name__ == '__main__':
 
         sys.exit(0)
 
-    rows = int(args['<rows>'])
-    columns = int(args['<columns>'])
 
-
-    with open(args['<layoutfile>'], 'r') as F:
-        layers, unknowncodes = layoutfromfile(
-            F,
-            (rows, columns),
-            args['--filter'],
-            args['--reverse'],
-            keycodes,
-        )
+    layers, unknowncodes = layoutfromfile(
+        prefs.layoutfile,
+        (prefs.rows, prefs.columns),
+        prefs.filter[0],
+        prefs.reverse,
+        keycodes,
+    )
 
     for layernum, layer in sorted(layers.items()):
         for command in layer.commands(layernum):
-            print(args['<command>'] + command, end=' ')
+            print(prefs.command[0] + command, end=' ')
         print()
 
     for code in sorted(unknowncodes):
