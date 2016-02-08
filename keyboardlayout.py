@@ -199,6 +199,20 @@ def layoutfromfile(file, layersize, filter, reverse, keycodes):
                     int(subparts[2]),
                 )
 
+            elif keyname.startswith('TV_'):
+                subparts = keyname.split('_')
+                if len(subparts) != 3:
+                    raise ValueError(
+                        'invalid TV key format',
+                        linenum,
+                        keyname,
+                    )
+
+                key = Key(
+                    int(subparts[2]),
+                    int(subparts[1]),
+                )
+
             if key is not None:
                 if reverse:
                     col = layersize[1] - 1 - col
