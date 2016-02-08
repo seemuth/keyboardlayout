@@ -114,7 +114,7 @@ def keycodesfromfile(file):
         try:
             name, keyval, keytype = line.split('\t')
         except ValueError:
-            print('Invalid line:', line)
+            print('Invalid line:', line, file=sys.stderr)
             continue
 
         keyval = int(keyval)
@@ -289,7 +289,7 @@ if __name__ == '__main__':
 
         for key, names in val2names.items():
             if len(names) != 1:
-                print('KEY2CODE', key, sorted(names))
+                print('KEY2CODE', key, sorted(names), file=sys.stderr)
 
         sys.exit(0)
 
@@ -302,10 +302,11 @@ if __name__ == '__main__':
         keycodes,
     )
 
+    print(' ')
     for layernum, layer in sorted(layers.items()):
         for command in layer.commands(layernum):
             print(prefs.command[0] + command, end=' ')
-        print()
+    print(' ')
 
     for code in sorted(unknowncodes):
-        print('UNKNOWN', repr(code))
+        print('UNKNOWN', repr(code), file=sys.stderr)
